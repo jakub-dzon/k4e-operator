@@ -38,7 +38,7 @@ var _ = Describe("EdgeDevice controller", func() {
 	BeforeEach(func() {
 		k8sManager = getK8sManager(cfg)
 		mockCtrl := gomock.NewController(GinkgoT())
-		edgeDeviceRepository := edgedevice.NewEdgeDeviceRepository(k8sClient)
+		edgeDeviceRepository := edgedevice.NewEdgeDeviceRepository(k8sClient, nil)
 		edgeDeviceReconciler = &controllers.EdgeDeviceReconciler{
 			Client:               k8sClient,
 			Scheme:               k8sManager.GetScheme(),

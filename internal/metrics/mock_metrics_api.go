@@ -68,3 +68,39 @@ func (mr *MockMetricsMockRecorder) IncEdgeDeviceUnregistration() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncEdgeDeviceUnregistration", reflect.TypeOf((*MockMetrics)(nil).IncEdgeDeviceUnregistration))
 }
+
+// SetPatchEdgeDeviceStatusTime mocks base method.
+func (m *MockMetrics) SetPatchEdgeDeviceStatusTime(duration int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPatchEdgeDeviceStatusTime", duration)
+}
+
+// SetPatchEdgeDeviceStatusTime indicates an expected call of SetPatchEdgeDeviceStatusTime.
+func (mr *MockMetricsMockRecorder) SetPatchEdgeDeviceStatusTime(duration interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPatchEdgeDeviceStatusTime", reflect.TypeOf((*MockMetrics)(nil).SetPatchEdgeDeviceStatusTime), duration)
+}
+
+// SetPatchEdgeDeviceTime mocks base method.
+func (m *MockMetrics) SetPatchEdgeDeviceTime(duration int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPatchEdgeDeviceTime", duration)
+}
+
+// SetPatchEdgeDeviceTime indicates an expected call of SetPatchEdgeDeviceTime.
+func (mr *MockMetricsMockRecorder) SetPatchEdgeDeviceTime(duration interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPatchEdgeDeviceTime", reflect.TypeOf((*MockMetrics)(nil).SetPatchEdgeDeviceTime), duration)
+}
+
+// SetProcessHeartbeatTime mocks base method.
+func (m *MockMetrics) SetProcessHeartbeatTime(duration int64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetProcessHeartbeatTime", duration)
+}
+
+// SetProcessHeartbeatTime indicates an expected call of SetProcessHeartbeatTime.
+func (mr *MockMetricsMockRecorder) SetProcessHeartbeatTime(duration interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProcessHeartbeatTime", reflect.TypeOf((*MockMetrics)(nil).SetProcessHeartbeatTime), duration)
+}

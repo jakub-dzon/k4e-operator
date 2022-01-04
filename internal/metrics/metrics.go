@@ -10,9 +10,30 @@ const (
 	EdgeDeviceSuccessfulRegistrationQuery = "flotta_operator_edge_devices_successful_registration"
 	EdgeDeviceFailedRegistrationQuery     = "flotta_operator_edge_devices_failed_registration"
 	EdgeDeviceUnregistrationQuery         = "flotta_operator_edge_devices_unregistration"
+	PatchEdgeDeviceStatusDurationQuery    = "flotta_operator_edge_devices_patch_status_duration_milliseconds"
+	PatchEdgeDeviceDurationQuery          = "flotta_operator_edge_devices_patch_duration_milliseconds"
+	ProcessHeartbeatDurationQuery         = "flotta_operator_process_heartbeat_duration_milliseconds"
 )
 
 var (
+	processHeartbeatDuration = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: ProcessHeartbeatDurationQuery,
+			Help: "Time in millis to process a heartbeat",
+		},
+	)
+	patchEdgeDeviceStatusDuration = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: PatchEdgeDeviceStatusDurationQuery,
+			Help: "Time in millis to patch EdgeDevices status",
+		},
+	)
+	patchEdgeDevicesDuration = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: PatchEdgeDeviceDurationQuery,
+			Help: "Time in millis to patch EdgeDevice",
+		},
+	)
 	registeredEdgeDevices = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: EdgeDeviceSuccessfulRegistrationQuery,
@@ -39,6 +60,9 @@ func init() {
 		registeredEdgeDevices,
 		failedToCompleteRegistrationEdgeDevices,
 		unregisteredEdgeDevices,
+		patchEdgeDeviceStatusDuration,
+		patchEdgeDevicesDuration,
+		processHeartbeatDuration,
 	)
 }
 
@@ -49,6 +73,9 @@ type Metrics interface {
 	IncEdgeDeviceSuccessfulRegistration()
 	IncEdgeDeviceFailedRegistration()
 	IncEdgeDeviceUnregistration()
+	SetPatchEdgeDeviceStatusTime(duration int64)
+	SetPatchEdgeDeviceTime(duration int64)
+	SetProcessHeartbeatTime(duration int64)
 }
 
 func New() Metrics {
@@ -56,6 +83,18 @@ func New() Metrics {
 }
 
 type metricsImpl struct{}
+
+func (m *metricsImpl) SetProcessHeartbeatTime(duration int64) {
+	processHeartbeatDuration.Set(float64(duration))
+}
+
+func (m *metricsImpl) SetPatchEdgeDeviceTime(duration int64) {
+	patchEdgeDevicesDuration.Set(float64(duration))
+}
+
+func (m *metricsImpl) SetPatchEdgeDeviceStatusTime(duration int64) {
+	patchEdgeDeviceStatusDuration.Set(float64(duration))
+}
 
 func (m *metricsImpl) IncEdgeDeviceSuccessfulRegistration() {
 	registeredEdgeDevices.Inc()

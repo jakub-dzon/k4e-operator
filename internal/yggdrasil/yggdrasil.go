@@ -76,6 +76,8 @@ func NewYggdrasilHandler(deviceRepository edgedevice.Repository, deploymentRepos
 	claimer *storage.Claimer, k8sClient k8sclient.K8sClient, initialNamespace string, recorder record.EventRecorder,
 	registryAuth images.RegistryAuthAPI, metrics metrics.Metrics, allowLists devicemetrics.AllowListGenerator,
 	configMaps configmaps.ConfigMap) *Handler {
+	handler := heartbeat.NewProcessAllHandler(deviceRepository, recorder)
+	handler.Start()
 	return &Handler{
 		deviceRepository:       deviceRepository,
 		deploymentRepository:   deploymentRepository,
@@ -86,7 +88,7 @@ func NewYggdrasilHandler(deviceRepository edgedevice.Repository, deploymentRepos
 		registryAuthRepository: registryAuth,
 		metrics:                metrics,
 		allowLists:             allowLists,
-		heartbeatHandler:       heartbeat.NewSynchronousHandler(deviceRepository, recorder),
+		heartbeatHandler:       handler,
 		configMaps:             configMaps,
 	}
 }

@@ -31,7 +31,7 @@ func (h *ProcessAllHandler) Start() {
 	for i := 0; i < 5; i++ {
 		go func() {
 			for j := range h.notifications {
-				err := h.process(nil, j)
+				err := h.process(context.Background(), j)
 				if err != nil {
 					j.Retry++
 					h.notifications <- j
@@ -66,6 +66,11 @@ func (h *ProcessAllHandler) process(ctx context.Context, notification Notificati
 		if err != nil {
 			return err
 		}
+	}
+
+	err = h.updater.updateLabels(ctx, edgeDevice, heartbeat)
+	if err != nil {
+		return err
 	}
 
 	// Produce k8s events based on the device-worker events:

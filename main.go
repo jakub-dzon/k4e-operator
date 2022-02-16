@@ -129,6 +129,8 @@ var Config struct {
 
 	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run
 	MaxConcurrentReconciles uint `envconfig:"MAX_CONCURRENT_RECONCILES" default:"3"`
+
+	NamespaceCount uint `envconfig:"NAMESPACES_COUNT" default:"10"`
 }
 
 func init() {
@@ -308,6 +310,7 @@ func main() {
 			devicemetrics.NewAllowListGenerator(k8sClient),
 			configmaps.NewConfigMap(k8sClient),
 			mtlsConfig,
+			Config.NamespaceCount,
 		)
 
 		h, err := restapi.Handler(restapi.Config{

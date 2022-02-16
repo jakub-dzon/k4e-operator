@@ -69,6 +69,7 @@ type Handler struct {
 	heartbeatHandler       heartbeat.Handler
 	configMaps             configmaps.ConfigMap
 	mtlsConfig             *mtls.TLSConfig
+	nsCount                uint
 }
 
 type keyMapType = map[string]interface{}
@@ -77,7 +78,7 @@ type secretMapType = map[string]keyMapType
 func NewYggdrasilHandler(deviceRepository edgedevice.Repository, deploymentRepository edgedeployment.Repository,
 	claimer *storage.Claimer, k8sClient k8sclient.K8sClient, initialNamespace string, recorder record.EventRecorder,
 	registryAuth images.RegistryAuthAPI, metrics metrics.Metrics, allowLists devicemetrics.AllowListGenerator,
-	configMaps configmaps.ConfigMap, mtlsConfig *mtls.TLSConfig) *Handler {
+	configMaps configmaps.ConfigMap, mtlsConfig *mtls.TLSConfig, nsCount uint) *Handler {
 	return &Handler{
 		deviceRepository:       deviceRepository,
 		deploymentRepository:   deploymentRepository,
@@ -91,6 +92,7 @@ func NewYggdrasilHandler(deviceRepository edgedevice.Repository, deploymentRepos
 		heartbeatHandler:       heartbeat.NewSynchronousHandler(deviceRepository, recorder, metrics),
 		configMaps:             configMaps,
 		mtlsConfig:             mtlsConfig,
+		nsCount:                nsCount,
 	}
 }
 
@@ -115,7 +117,7 @@ func (h *Handler) GetAuthType(r *http.Request) int {
 func (h *Handler) GetControlMessageForDevice(ctx context.Context, params yggdrasil.GetControlMessageForDeviceParams) middleware.Responder {
 	deviceID := params.DeviceID
 	logger := log.FromContext(ctx, "DeviceID", deviceID)
-	edgeDevice, err := h.deviceRepository.Read(ctx, deviceID, h.initialNamespace)
+	edgeDevice, err := h.deviceRepository.Read(ctx, deviceID, h.getNamespaceByDeviceID(deviceID, logger))
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("edge device is not found")
@@ -142,7 +144,7 @@ func (h *Handler) GetControlMessageForDevice(ctx context.Context, params yggdras
 func (h *Handler) GetDataMessageForDevice(ctx context.Context, params yggdrasil.GetDataMessageForDeviceParams) middleware.Responder {
 	deviceID := params.DeviceID
 	logger := log.FromContext(ctx, "DeviceID", deviceID)
-	edgeDevice, err := h.deviceRepository.Read(ctx, deviceID, h.initialNamespace)
+	edgeDevice, err := h.deviceRepository.Read(ctx, deviceID, h.getNamespaceByDeviceID(deviceID, logger))
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("edge device is not found")
@@ -302,7 +304,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		start := time.Now()
 		err = h.heartbeatHandler.Process(ctx, heartbeat.Notification{
 			DeviceID:  deviceID,
-			Namespace: h.initialNamespace,
+			Namespace: h.getNamespaceByDeviceID(deviceID, logger),
 			Heartbeat: &hb,
 		})
 		duration := time.Since(start)
@@ -331,7 +333,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		}
 		content := models.RegistrationResponse{}
 
-		_, err = h.deviceRepository.Read(ctx, deviceID, h.initialNamespace)
+		_, err = h.deviceRepository.Read(ctx, deviceID, h.getNamespaceByDeviceID(deviceID, logger))
 		if err == nil {
 			// @TODO remove this IF when MTLS is finished
 			if registrationInfo.CertificateRequest != "" {
@@ -367,7 +369,7 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 			},
 		}
 		device.Name = deviceID
-		device.Namespace = h.initialNamespace
+		device.Namespace = h.getNamespaceByDeviceID(deviceID, logger)
 		device.Finalizers = []string{YggdrasilConnectionFinalizer, YggdrasilWorkloadFinalizer}
 		err = h.deviceRepository.Create(ctx, &device)
 		if err != nil {
@@ -732,4 +734,18 @@ func (h *Handler) getDeviceSyslogLogConfig(ctx context.Context, edgeDevice *v1al
 		Address:  cm.Data["Address"],
 		Protocol: proto,
 	}, nil
+}
+
+func (h *Handler) getNamespaceByDeviceID(deviceID string, log logr.Logger) string {
+	if h.nsCount == 0 {
+		return "default"
+	}
+	var hash uint
+	t := deviceID[0:5]
+	for i := 0; i < len(t); i++ {
+		hash = 31*hash + uint(t[i])
+	}
+	ns := fmt.Sprint(hash % uint(h.nsCount))
+	log.Info("================> namespace for device", "deviceID", deviceID, "namespace", ns, "hash", hash, "mod", hash%uint(h.nsCount), "nsCount", h.nsCount, "slice", t)
+	return ns
 }

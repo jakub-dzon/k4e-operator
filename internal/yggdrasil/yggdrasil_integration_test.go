@@ -111,7 +111,7 @@ var _ = Describe("Yggdrasil", func() {
 		configMap = configmaps.NewMockConfigMap(mockCtrl)
 
 		handler = yggdrasil.NewYggdrasilHandler(edgeDeviceRepoMock, deployRepoMock, nil, Mockk8sClient, testNamespace,
-			eventsRecorder, registryAuth, metricsMock, allowListsMock, configMap, nil)
+			eventsRecorder, registryAuth, metricsMock, allowListsMock, configMap, nil, 0)
 	})
 
 	AfterEach(func() {
@@ -2089,6 +2089,7 @@ var _ = Describe("Yggdrasil", func() {
 						allowListsMock,
 						configMap,
 						MTLSConfig,
+						0,
 					)
 					_, _, err := MTLSConfig.InitCertificates()
 					Expect(err).ToNot(HaveOccurred())

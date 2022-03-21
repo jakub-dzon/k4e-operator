@@ -207,6 +207,22 @@
           "interval": "",
           "legendFormat": "registered",
           "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "flotta_operator_edge_devices_patch_duration_milliseconds",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "flotta_operator_edge_devices_patch_status_duration_milliseconds",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
         }
       ],
       "thresholds": [],

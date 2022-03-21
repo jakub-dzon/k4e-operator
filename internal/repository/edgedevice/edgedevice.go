@@ -2,6 +2,7 @@ package edgedevice
 
 import (
 	"context"
+	"github.com/project-flotta/flotta-operator/internal/metrics"
 	"reflect"
 	"time"
 
@@ -25,11 +26,12 @@ type Repository interface {
 }
 
 type CRRepository struct {
-	client client.Client
+	client  client.Client
+	metrics metrics.Metrics
 }
 
-func NewEdgeDeviceRepository(client client.Client) *CRRepository {
-	return &CRRepository{client: client}
+func NewEdgeDeviceRepository(client client.Client, metrics metrics.Metrics) *CRRepository {
+	return &CRRepository{client: client, metrics: metrics}
 }
 
 func (r *CRRepository) Read(ctx context.Context, name string, namespace string) (*v1alpha1.EdgeDevice, error) {
@@ -43,12 +45,20 @@ func (r *CRRepository) Create(ctx context.Context, edgeDevice *v1alpha1.EdgeDevi
 }
 
 func (r *CRRepository) PatchStatus(ctx context.Context, edgeDevice *v1alpha1.EdgeDevice, patch *client.Patch) error {
-	return r.client.Status().Patch(ctx, edgeDevice, *patch)
+	start := time.Now()
+	err := r.client.Status().Patch(ctx, edgeDevice, *patch)
+	duration := time.Since(start)
+	r.metrics.SetPatchEdgeDeviceStatusTime(duration.Milliseconds())
+	return err
 }
 
 func (r *CRRepository) Patch(ctx context.Context, old, new *v1alpha1.EdgeDevice) error {
 	patch := client.MergeFrom(old)
-	return r.client.Patch(ctx, new, patch)
+	start := time.Now()
+	err := r.client.Patch(ctx, new, patch)
+	duration := time.Since(start)
+	r.metrics.SetPatchEdgeDeviceTime(duration.Milliseconds())
+	return err
 }
 
 func (r CRRepository) ListForSelector(ctx context.Context, selector *metav1.LabelSelector, namespace string) ([]v1alpha1.EdgeDevice, error) {

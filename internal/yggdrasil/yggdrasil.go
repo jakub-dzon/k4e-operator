@@ -299,11 +299,14 @@ func (h *Handler) PostDataMessageForDevice(ctx context.Context, params yggdrasil
 		if err != nil {
 			return operations.NewPostDataMessageForDeviceBadRequest()
 		}
+		start := time.Now()
 		err = h.heartbeatHandler.Process(ctx, heartbeat.Notification{
 			DeviceID:  deviceID,
 			Namespace: h.initialNamespace,
 			Heartbeat: &hb,
 		})
+		duration := time.Since(start)
+		h.metrics.SetProcessHeartbeatTime(duration.Milliseconds())
 		if err != nil {
 			if errors.IsNotFound(err) {
 				logger.V(1).Info("Device not found")
